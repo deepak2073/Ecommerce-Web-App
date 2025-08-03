@@ -15,7 +15,7 @@ const useAppContext = () => {
 };
 
 // API service
-const API_BASE = 'http://localhost:8080/api';
+const API_BASE = 'https://ecommerce-web-app-k6c9.onrender.com/api';
 
 const api = {
   async request(endpoint, options = {}) {
@@ -44,11 +44,11 @@ const api = {
   },
 
   // Auth endpoints
-  signup: (data) => api.request('/users', { method: 'POST', body: JSON.stringify(data) }),
-  login: (data) => api.request('/users/login', { method: 'POST', body: JSON.stringify(data) }),
+  signup: (data) => api.request('api/users', { method: 'POST', body: JSON.stringify(data) }),
+  login: (data) => api.request('api/users/login', { method: 'POST', body: JSON.stringify(data) }),
 
   // Items endpoints
-  getItems: () => api.request('/items'),
+  getItems: () => api.request('api/items'),
   createItem: (data) => api.request('/items', { method: 'POST', body: JSON.stringify(data) }),
 
   // Cart endpoints
