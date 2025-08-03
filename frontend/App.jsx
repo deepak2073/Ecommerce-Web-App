@@ -16,6 +16,8 @@ const useAppContext = () => {
 
 // API service
 const API_BASE = import.meta.env.VITE_API_BASE;
+console.log("API_BASE:", import.meta.env.VITE_API_BASE);
+
 
 
 const api = {
