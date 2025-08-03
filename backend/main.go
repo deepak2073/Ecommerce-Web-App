@@ -446,7 +446,10 @@ func setupRoutes() *gin.Engine {
 
 	// CORS middleware
 	config := cors.DefaultConfig()
-	config.AllowAllOrigins = true
+        config.AllowedOrigins = []string{
+        "https://ecommerce-web-app-1t64.vercel.app/",
+        "http://localhost:3000", // for local development
+        }
 	config.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization"}
 	config.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
 	r.Use(cors.New(config))
