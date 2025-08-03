@@ -1,79 +1,205 @@
+
+import React, { useState, useEffect, createContext, useContext } from 'react';
 import { ShoppingCart, User, Package, Star, Plus, Minus, X, LogIn, UserPlus, LogOut, Eye, Trash2 } from 'lucide-react';
+// import {SignupModal, LoginModal, CartModal, OrdersModal, Toast, Modal, ProductCard, Header} from  './components';
+
+// Context for global state management
+const AppContext = createContext();
+
+const useAppContext = () => {
+  const context = useContext(AppContext);
+  if (!context) {
+    throw new Error('useAppContext must be used within AppProvider');
+  }
+  return context;
+};
+
+// API service
+const API_BASE = 'http://localhost:8080/api';
+
+const api = {
+  async request(endpoint, options = {}) {
+    const token = localStorage.getItem('token');
+    const headers = {
+      'Content-Type': 'application/json',
+      ...(token && { Authorization: token }),
+      ...options.headers,
+    };
+
+    try {
+      const response = await fetch(`${API_BASE}${endpoint}`, {
+        ...options,
+        headers,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Request failed');
+      }
+
+      return await response.json();
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Auth endpoints
+  signup: (data) => api.request('/users', { method: 'POST', body: JSON.stringify(data) }),
+  login: (data) => api.request('/users/login', { method: 'POST', body: JSON.stringify(data) }),
+
+  // Items endpoints
+  getItems: () => api.request('/items'),
+  createItem: (data) => api.request('/items', { method: 'POST', body: JSON.stringify(data) }),
+
+  // Cart endpoints
+  getCart: () => api.request('/carts/me'),
+  addToCart: (data) => api.request('/carts', { method: 'POST', body: JSON.stringify(data) }),
+  removeFromCart: (itemId) => api.request(`/carts/items/${itemId}`, { method: 'DELETE' }),
+
+  // Order endpoints
+  createOrder: () => api.request('/orders', { method: 'POST', body: JSON.stringify({}) }),
+  getOrders: () => api.request('/orders/me'),
+};
 
 
-// const SignupModal = ({ isOpen, onClose, onSuccess }) => {
-//   const [formData, setFormData] = useState({ username: '', email: '', password: '' });
-//   const [loading, setLoading] = useState(false);
-//   const { showToast } = useAppContext();
+const App = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [username, setUsername] = useState('');
+  const [products, setProducts] = useState([]);
+  const [cart, setCart] = useState(null);
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState(null);
+  
+  // Modal states
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showSignupModal, setShowSignupModal] = useState(false);
+  const [showCartModal, setShowCartModal] = useState(false);
+  const [showOrdersModal, setShowOrdersModal] = useState(false);
 
-//   const handleSubmit = async () => {
-//     if (!formData.username || !formData.email || !formData.password) {
-//       showToast('Please fill in all fields', 'error');
-//       return;
-//     }
+  const showToast = (message, type) => {
+    setToast({ message, type });
+  };
 
-//     if (formData.password.length < 6) {
-//       showToast('Password must be at least 6 characters', 'error');
-//       return;
-//     }
+  const closeToast = () => {
+    setToast(null);
+  };
 
-//     setLoading(true);
+  // Check login status on mount
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const storedUsername = localStorage.getItem('username');
+    
+    if (token && storedUsername) {
+      setIsLoggedIn(true);
+      setUsername(storedUsername);
+    }
+    
+    loadProducts();
+    setLoading(false);
+  }, []);
 
-//     try {
-//       await api.signup(formData);
-//       showToast('Account created successfully! Please login.', 'success');
-//       onClose();
-//       onSuccess();
-//     } catch (error) {
-//       showToast(error.message, 'error');
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
+  // Load cart when logged in
+  useEffect(() => {
+    if (isLoggedIn) {
+      loadCart();
+      loadOrders();
+    }
+  }, [isLoggedIn]);
 
-//   return (
-//     <Modal isOpen={isOpen} onClose={onClose} title="Sign Up">
-//       <div>
-//         <div className="mb-4">
-//           <label className="block text-sm font-medium mb-2">Username</label>
-//           <input
-//             type="text"
-//             value={formData.username}
-//             onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-//             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-//           />
-//         </div>
-//         <div className="mb-4">
-//           <label className="block text-sm font-medium mb-2">Email</label>
-//           <input
-//             type="email"
-//             value={formData.email}
-//             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-//             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-//           />
-//         </div>
-//         <div className="mb-6">
-//           <label className="block text-sm font-medium mb-2">Password</label>
-//           <input
-//             type="password"
-//             value={formData.password}
-//             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-//             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-//           />
-//         </div>
-//         <button
-//           onClick={handleSubmit}
-//           disabled={loading}
-//           className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 disabled:opacity-50"
-//         >
-//           {loading ? 'Creating Account...' : 'Sign Up'}
-//         </button>
-//       </div>
-//     </Modal>
-//   );
-// };
+  const loadProducts = async () => {
+    try {
+      const response = await api.getItems();
+      setProducts(response.items || []);
+    } catch (error) {
+      showToast('Failed to load products', 'error');
+    }
+  };
 
+  const loadCart = async () => {
+    try {
+      const response = await api.getCart();
+      setCart(response.cart);
+    } catch (error) {
+      console.error('Failed to load cart:', error);
+    }
+  };
 
+  const loadOrders = async () => {
+    try {
+      const response = await api.getOrders();
+      setOrders(response.orders || []);
+    } catch (error) {
+      console.error('Failed to load orders:', error);
+    }
+  };
+
+  const handleLogin = () => {
+    setShowLoginModal(true);
+  };
+
+  const handleSignup = () => {
+    setShowSignupModal(true);
+  };
+
+  const handleLoginSuccess = () => {
+    const storedUsername = localStorage.getItem('username');
+    setIsLoggedIn(true);
+    setUsername(storedUsername);
+    setShowLoginModal(false);
+  };
+
+  const handleSignupSuccess = () => {
+    setShowSignupModal(false);
+    setShowLoginModal(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('username');
+    localStorage.removeItem('userId');
+    setIsLoggedIn(false);
+    setUsername('');
+    setCart(null);
+    setOrders([]);
+    showToast('Logged out successfully', 'success');
+  };
+
+  const handleAddToCart = async (itemId, quantity) => {
+    try {
+      await api.addToCart({ item_id: itemId, quantity });
+      loadCart();
+      showToast('Item added to cart!', 'success');
+    } catch (error) {
+      showToast(error.message, 'error');
+    }
+  };
+
+  const handleRemoveFromCart = async (itemId) => {
+    try {
+      await api.removeFromCart(itemId);
+      loadCart();
+      showToast('Item removed from cart', 'success');
+    } catch (error) {
+      showToast(error.message, 'error');
+    }
+  };
+
+  const handleCheckout = async () => {
+    try {
+      await api.createOrder();
+      loadCart();
+      loadOrders();
+      setShowCartModal(false);
+      showToast('Order placed successfully!', 'success');
+    } catch (error) {
+      showToast(error.message, 'error');
+    }
+  };
+
+  const cartItemCount = cart?.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
+
+  
 const Toast = ({ message, type, onClose }) => {
   useEffect(() => {
     const timer = setTimeout(onClose, 3000);
@@ -455,14 +581,85 @@ const Header = ({
   );
 };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-xl text-gray-600">Loading...</div>
+      </div>
+    );
+  }
 
-export {
-  SignupModal,
-  LoginModal,
-  CartModal,
-  OrdersModal,
-  Toast,
-  Modal,
-  ProductCard,
-  Header,
+  return (
+    
+    <AppContext.Provider value={{ showToast }}>
+      <div className="min-h-screen bg-gray-50">
+        <Header
+          isLoggedIn={isLoggedIn}
+          username={username}
+          cartItemCount={cartItemCount}
+          onLogin={handleLogin}
+          onSignup={handleSignup}
+          onLogout={handleLogout}
+          onCartClick={() => setShowCartModal(true)}
+          onOrdersClick={() => setShowOrdersModal(true)}
+        />
+
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-gray-800 mb-4">Featured Products</h2>
+            <p className="text-gray-600">Discover amazing products at great prices</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {products.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                onAddToCart={handleAddToCart}
+                isLoggedIn={isLoggedIn}
+              />
+            ))}
+          </div>
+        </main>
+
+        {/* Modals */}
+        <LoginModal
+          isOpen={showLoginModal}
+          onClose={() => setShowLoginModal(false)}
+          onSuccess={handleLoginSuccess}
+        />
+
+        <SignupModal
+          isOpen={showSignupModal}
+          onClose={() => setShowSignupModal(false)}
+          onSuccess={handleSignupSuccess}
+        />
+
+        <CartModal
+          isOpen={showCartModal}
+          onClose={() => setShowCartModal(false)}
+          cart={cart}
+          onRemoveItem={handleRemoveFromCart}
+          onCheckout={handleCheckout}
+        />
+
+        <OrdersModal
+          isOpen={showOrdersModal}
+          onClose={() => setShowOrdersModal(false)}
+          orders={orders}
+        />
+
+        {/* Toast */}
+        {toast && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={closeToast}
+          />
+        )}
+      </div>
+    </AppContext.Provider>
+  );
 };
+
+export default App;
