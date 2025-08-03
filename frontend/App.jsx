@@ -612,6 +612,7 @@ const Header = ({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {console.log("API base is:", import.meta.env.VITE_API_BASE)}
             {products.map((product) => (
               <ProductCard
                 key={product.id}
