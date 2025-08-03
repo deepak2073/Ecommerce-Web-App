@@ -445,7 +445,7 @@ func setupRoutes() *gin.Engine {
 	r := gin.Default()
 
 	config := cors.Config{
-    	AllowOrigins:     []string{"https://ecommerce-web-app-1t64.vercel.app/", "http://localhost:3000"},
+    	AllowOrigins:     []string{"https://ecommerce-web-app-1t64.vercel.app/",
     	AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
     	AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
     	AllowCredentials: true,
