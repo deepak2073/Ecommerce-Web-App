@@ -15,7 +15,8 @@ const useAppContext = () => {
 };
 
 // API service
-const API_BASE = 'https://ecommerce-web-app-k6c9.onrender.com/api';
+const API_BASE = import.meta.env.VITE_API_BASE;
+
 
 const api = {
   async request(endpoint, options = {}) {
