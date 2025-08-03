@@ -445,7 +445,7 @@ func setupRoutes() *gin.Engine {
 	r := gin.Default()
 
 	config := cors.Config{
-    	AllowOrigins:     []string{"https://ecommerce-web-app-dowq.vercel.app/",
+    	AllowOrigins:     []string{"https://ecommerce-web-app-dowq.vercel.app/"},
     	AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
     	AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
     	AllowCredentials: true,
