@@ -44,11 +44,11 @@ const api = {
   },
 
   // Auth endpoints
-  signup: (data) => api.request('api/users', { method: 'POST', body: JSON.stringify(data) }),
-  login: (data) => api.request('api/users/login', { method: 'POST', body: JSON.stringify(data) }),
+  signup: (data) => api.request('/users', { method: 'POST', body: JSON.stringify(data) }),
+  login: (data) => api.request('/users/login', { method: 'POST', body: JSON.stringify(data) }),
 
   // Items endpoints
-  getItems: () => api.request('api/items'),
+  getItems: () => api.request('/items'),
   createItem: (data) => api.request('/items', { method: 'POST', body: JSON.stringify(data) }),
 
   // Cart endpoints
