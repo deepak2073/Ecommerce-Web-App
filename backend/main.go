@@ -444,14 +444,13 @@ func initDatabase() {
 func setupRoutes() *gin.Engine {
 	r := gin.Default()
 
-	// CORS middleware
-	config := cors.DefaultConfig()
-        config.AllowedOrigins = []string{
-        "https://ecommerce-web-app-1t64.vercel.app/",
-        "http://localhost:3000", // for local development
-        }
-	config.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization"}
-	config.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
+	onfig := cors.Config{
+    AllowOrigins:     []string{"https://ecommerce-web-app-1t64.vercel.app/", "http://localhost:3000"},
+    AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+    AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+    AllowCredentials: true,
+}
+	
 	r.Use(cors.New(config))
 
 	// API routes
