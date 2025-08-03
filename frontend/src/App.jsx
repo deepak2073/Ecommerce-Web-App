@@ -14,7 +14,7 @@ const useAppContext = () => {
 };
 
 // API service
-const API_BASE = 'http://localhost:8080/api';
+const API_BASE = 'https://ecommerce-web-app-k6c9.onrender.com';
 
 const api = {
   async request(endpoint, options = {}) {
