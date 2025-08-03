@@ -444,12 +444,12 @@ func initDatabase() {
 func setupRoutes() *gin.Engine {
 	r := gin.Default()
 
-	onfig := cors.Config{
-    AllowOrigins:     []string{"https://ecommerce-web-app-1t64.vercel.app/", "http://localhost:3000"},
-    AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-    AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
-    AllowCredentials: true,
-}
+	config := cors.Config{
+    	AllowOrigins:     []string{"https://ecommerce-web-app-1t64.vercel.app/", "http://localhost:3000"},
+    	AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+    	AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+    	AllowCredentials: true,
+	}
 	
 	r.Use(cors.New(config))
 
